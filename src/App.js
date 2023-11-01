@@ -1,24 +1,25 @@
-import logo from './logo.svg';
 import './App.css';
+import { Container } from 'react-bootstrap';
+import { useState } from 'react';
+import FetchProducts from './components/FetchProducts';
 
 function App() {
+  const [params, setParams] = useState({});
+  const { products, loading, error } = FetchProducts(params);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container className='my-4'>
+    <h1 className='mb-4'> Product List</h1>
+    {/* <SearchBar params={params} handleParamChange={handleParamChange} />
+    <JobPagination page={page} setPage={setPage} hasNextPage={true} /> */}
+      {loading && <h1>Loading...</h1>}
+      {error && <h1>Error, try refreshing!</h1>}
+      {/* {jobs.map(job => {
+        return (
+          <JobCard key={job.id} job={job} />
+        )
+      })}
+      <JobPagination page={page} setPage={setPage} hasNextPage={hasNextPage} /> */}
+    </Container>
   );
 }
 
