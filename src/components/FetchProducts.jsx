@@ -45,8 +45,8 @@ const FetchProducts = (params) => {
                 ...params
             }
         }).then( res => {
-            console.log(res.data);
-            dispatch({ type:ACTIONS.GET_DATA, payload: { products: res.data }})
+            console.log("res.data.products", res.data.products);
+            dispatch({ type:ACTIONS.GET_DATA, payload: { products: res.data.products }})
         }).catch(e => {
             if(axios.isCancel(e))
                 return  //ignore and return nothing
