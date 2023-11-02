@@ -1,23 +1,33 @@
 import React, { useState } from 'react'
-import { Card } from 'react-bootstrap'
+import { Card, Carousel, Col } from 'react-bootstrap'
 
 const ProductCard = ({ product }) => {
 
   return (
-    <Card className='mb-10'>
-    <Card.Body>
-        <div className='d-flex justify-content-between'>
-            <div>
-                <Card.Img src={product.images[0]} alt={product.title} fluid={true} />
-                <Card.Title>
-                    {product.title}
-                </Card.Title>
-                <Card.Subtitle className='text-muted mb-2'>
-                    {product.description}
-                </Card.Subtitle>
+    <Card className='mb-10' style={{height:"100%"}} >
+        <Card.Body>
+            <div className='d-flex justify-content-between'>
+                <div>
+                    <Carousel>
+                        {product.images.map((image, index) => (
+                            <Carousel.Item key={index} interval={3500}>
+                                <img src={image} alt={`${product.title} Image ${index}`} className="d-block w-100"style={{maxHeight:"150px"}} />
+                            </Carousel.Item>
+                        ))}
+                    </Carousel>
+                    <Card.Title className='mt-4'>
+                        {product.title}
+                    </Card.Title>
+                    <Card.Subtitle className='text-muted mb-2'>
+                        {product.description}
+                    </Card.Subtitle>
+
+                    <h5>
+                        <Card.Text> Rs.{product.price}</Card.Text>
+                    </h5>
+                </div>
             </div>
-        </div>
-    </Card.Body>
+        </Card.Body>
     </Card>
   )
 }

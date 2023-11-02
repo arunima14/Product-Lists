@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useReducer, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'https://dummyjson.com/products'
@@ -8,8 +7,10 @@ const ACTIONS = {
     MAKE_REQUEST: 'make-request',
     GET_DATA: 'get-data',
     ERROR: 'error',
-    UPDATE_HAS_NEXT_PAGE: 'update-has-next-page',
+    PAGINATE: 'paginate',
 }
+
+const PAGE_SIZE = 5;
 
 function reducer(state, action){
     switch(action.type){
@@ -22,8 +23,13 @@ function reducer(state, action){
         case ACTIONS.ERROR:
             return { ...state, loading: false, error: action.payload.error, products: [] }
 
-        // case ACTIONS.UPDATE_HAS_NEXT_PAGE:
-        //     return { ...state, hasNextPage: action.payload.hasNextPage }
+        case ACTIONS.PAGINATE:
+            const { currentPage, products } = action.payload;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            const paginatedProducts = products.slice(start, end);
+
+            return { ...state, currentPage, paginatedProducts };
         
         default:
             return state;
@@ -32,7 +38,7 @@ function reducer(state, action){
 
 
 const FetchProducts = (params) => {
-    const [state, dispatch] = useReducer(reducer, { products: [], loading: true })
+    const [state, dispatch] = useReducer(reducer, { products: [], loading: true, currentPage: 1, paginatedProducts: [], })
 
     useEffect(() => {
         const requestCancelToken = axios.CancelToken.source();
@@ -40,44 +46,36 @@ const FetchProducts = (params) => {
         axios.get(BASE_URL, {
             cancelToken: requestCancelToken.token,
             params: {
-                markdown: true, 
-                // page: page,
+                markdown: true,
                 ...params
             }
+
         }).then( res => {
             console.log("res.data.products", res.data.products);
-            dispatch({ type:ACTIONS.GET_DATA, payload: { products: res.data.products }})
+            let products = res.data.products;
+
+            // Filter products based on the search query
+            if (params.text) {
+            products = products.filter((product) => product.title.toLowerCase().includes(params.text.toLowerCase()));
+            }
+
+            // Sort products based on the chosen sort option
+            if (params.sortBy === 'price-asc') {
+                products.sort((a, b) => a.price - b.price);
+            } else if (params.sortBy === 'price-desc') {
+                products.sort((a, b) => b.price - a.price);
+            }
+            
+            dispatch({
+                type: ACTIONS.PAGINATE,
+                payload: { currentPage: params.page, products },
+            });
+            dispatch({ type:ACTIONS.GET_DATA, payload: { products: products }})
         }).catch(e => {
             if(axios.isCancel(e))
                 return  //ignore and return nothing
             dispatch({ type:ACTIONS.ERROR, payload: { error: e }})
         })
-
-
-        //check for next page
-        const nextPageCancelToken  = axios.CancelToken.source();
-        // axios.get(BASE_URL, {
-        //     cancelToken: nextPageCancelToken.token, 
-        //     headers: {
-        //         Authorization: 'dbd59d70544ce4b2f2332f4050c319253e0f8ee6'
-        //     },
-        //     params: {
-        //         markdown: true, 
-        //         page: page+1,
-        //         ...params
-        //     }
-        // }).then( res => {
-        //     dispatch({ type:ACTIONS.UPDATE_HAS_NEXT_PAGE, payload: { hasNextPage: GetJobs.count !== 0}})
-        // }).catch(e => {
-        //     if(axios.isCancel(e))
-        //         return  //ignore and return nothing
-        //     dispatch({ type:ACTIONS.ERROR, payload: { error: e }})
-        // })
-
-        return () => {
-            requestCancelToken.cancel();
-            nextPageCancelToken.cancel();
-        }
     }, [ params])
 
     return state;
